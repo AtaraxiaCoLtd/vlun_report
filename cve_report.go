@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/yhat/scrape"
 	"golang.org/x/net/html"
@@ -17,8 +18,8 @@ const (
 	CVSS2_ID = "BodyPlaceHolder_cplPageContent_plcZones_lt_zoneCenter_VulnerabilityDetail_VulnFormView_Vuln2CvssPanel"
 )
 
-func fetchCVSS(root *html.Node, id string) map[string]string {
-	cvssdata := make(map[string]string)
+func fetchCVSS(root *html.Node, id string) [][]string {
+	cvssdata := make([][]string, 0)
 	CVSS, ok := scrape.Find(root, scrape.ById(id))
 	if ok {
 		matcherList := func(n *html.Node) bool {
@@ -30,7 +31,10 @@ func fetchCVSS(root *html.Node, id string) map[string]string {
 
 		CVSSNode := scrape.FindAll(CVSS, matcherList)
 		for _, node := range CVSSNode {
-			fmt.Printf("%s\n", scrape.Text(node))
+			fields := strings.SplitN(scrape.Text(node), ":", 2)
+			if len(fields) > 1 {
+				cvssdata = append(cvssdata, fields)
+			}
 		}
 	}
 	return cvssdata
@@ -50,8 +54,10 @@ func fetchNVD(cve_num string) {
 		return
 	}
 
-	fetchCVSS(root, CVSS3_ID)
-	fetchCVSS(root, CVSS2_ID)
+	cvss3data := fetchCVSS(root, CVSS3_ID)
+	fmt.Printf("%v\n", cvss3data)
+	cvss2data := fetchCVSS(root, CVSS2_ID)
+	fmt.Printf("%v\n", cvss2data)
 }
 
 func main() {
