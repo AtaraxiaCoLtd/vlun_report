@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/yhat/scrape"
 	"golang.org/x/net/html"
@@ -16,57 +17,51 @@ const (
 	CVSS2_ID = "BodyPlaceHolder_cplPageContent_plcZones_lt_zoneCenter_VulnerabilityDetail_VulnFormView_Vuln2CvssPanel"
 )
 
+func fetchCVSS(root *html.Node, id string) map[string]string {
+	cvssdata := make(map[string]string)
+	CVSS, ok := scrape.Find(root, scrape.ById(id))
+	if ok {
+		matcherList := func(n *html.Node) bool {
+			if n.DataAtom == atom.Div {
+				return scrape.Attr(n, "class") == "row"
+			}
+			return false
+		}
+
+		CVSSNode := scrape.FindAll(CVSS, matcherList)
+		for _, node := range CVSSNode {
+			fmt.Printf("%s\n", scrape.Text(node))
+		}
+	}
+	return cvssdata
+}
+
+func fetchNVD(cve_num string) {
+	// request and parse the NVD page
+	resp, err := http.Get(fmt.Sprintf(NVD_URI, cve_num))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
+
+	root, err := html.Parse(resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
+
+	fetchCVSS(root, CVSS3_ID)
+	fetchCVSS(root, CVSS2_ID)
+}
+
 func main() {
 	var flag_cve string
 
 	flag.StringVar(&flag_cve, "number", "CVE-2017-6074", "cve numbers")
 	flag.StringVar(&flag_cve, "n", "CVE-2017-6074", "cve numbers")
 
-	fmt.Printf("[+] Generate for %s\n", flag_cve)
-	fmt.Printf("[+] Scrape from "+NVD_URI+"\n", flag_cve)
+	fmt.Fprintf(os.Stderr, "[+] Generate for %s\n", flag_cve)
+	fmt.Fprintf(os.Stderr, "[+] Scrape from "+NVD_URI+"\n", flag_cve)
 
-	// request and parse the front page
-	resp, err := http.Get(fmt.Sprintf(NVD_URI, flag_cve))
-	if err != nil {
-		panic(err)
-	}
-
-	root, err := html.Parse(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// Scrape CVSS3 from NVD
-	CVSS3, ok := scrape.Find(root, scrape.ById(CVSS3_ID))
-	if ok {
-		fmt.Printf("[+] Detect CVSS3 dataset\n")
-		matcherList := func(n *html.Node) bool {
-			if n.DataAtom == atom.Div {
-				return scrape.Attr(n, "class") == "row"
-			}
-			return false
-		}
-
-		CVSS3Node := scrape.FindAll(CVSS3, matcherList)
-		for _, node := range CVSS3Node {
-			fmt.Printf("%s\n", scrape.Text(node))
-		}
-	}
-
-	// Scrape CVSS2 from NVD
-	CVSS2, ok := scrape.Find(root, scrape.ById(CVSS2_ID))
-	if ok {
-		fmt.Printf("[+] Detect CVSS2 dataset\n")
-		matcherList := func(n *html.Node) bool {
-			if n.DataAtom == atom.Div {
-				return scrape.Attr(n, "class") == "row"
-			}
-			return false
-		}
-
-		CVSS2Node := scrape.FindAll(CVSS2, matcherList)
-		for _, node := range CVSS2Node {
-			fmt.Printf("%s\n", scrape.Text(node))
-		}
-	}
+	fetchNVD(flag_cve)
 }
