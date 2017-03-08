@@ -18,21 +18,60 @@ const (
 	CVSS2_ID = "BodyPlaceHolder_cplPageContent_plcZones_lt_zoneCenter_VulnerabilityDetail_VulnFormView_Vuln2CvssPanel"
 )
 
+var REFFERNCES = map[string]string{
+	"RedHat":      "https://access.redhat.com/security/cve/%s",
+	"Debian":      "https://security-tracker.debian.org/tracker/%s",
+	"NVD":         "https://web.nvd.nist.gov/view/vuln/detail?vulnId=%s",
+	"CERT":        "https://www.kb.cert.org/vuls/byid?query=%s&searchview=",
+	"LWN":         "https://lwn.net/Search/DoSearch?words=%s",
+	"oss-sec":     "https://marc.info/?s=%s&l=oss-security",
+	"fulldisc":    "https://marc.info/?s=%s&l=full-disclosure",
+	"bugtraq":     "https://marc.info/?s=%s&l=bugtraq",
+	"exploitdb":   "https://www.exploit-db.com/search/?action=search&cve=%s",
+	"metasploit":  "https://www.rapid7.com/db/search?q=%s",
+	"Ubuntu":      "https://people.canonical.com/~ubuntu-security/cve/%s.html",
+	"Github":      "https://github.com/search?q=\"%s\"",
+	"PacketStorm": "https://packetstormsecurity.com/search/?q=%s",
+	"bugzilla":    "https://bugzilla.redhat.com/show_bug.cgi?id=%s",
+	"twitter":     "https://twitter.com/search?q=%s",
+	"CentOS":      "https://www.centos.org/forums/search.php?keywords=%s",
+	"cvedetail":   "http://www.cvedetails.com/cve/%s/",
+}
+
 func main() {
 	var flag_cve string
 
 	flag.StringVar(&flag_cve, "numbers", "CVE-2017-6074,CVE-2014-0160", "cve numbers")
 	flag.StringVar(&flag_cve, "n", "CVE-2017-6074,CVE-2014-0160", "cve numbers")
 
-	fmt.Printf("# Vulnerability Report for %s\n", flag_cve)
+	fmt.Printf("# Vulnerability Report for %s\n\n", flag_cve)
 
 	cve_nums := strings.Split(flag_cve, ",")
 	for _, num := range cve_nums {
 		fetchNVD(num)
+		fetchREF(num)
 	}
 }
 
+func fetchREF(cve_num string) {
+	fmt.Printf("## Reffernces for %s\n", cve_num)
+	fmt.Printf("\n")
+	for key, val := range REFFERNCES {
+		var n string
+		if key == "exploitdb" {
+			n = strings.Replace(cve_num, "CVE-", "", 1)
+		} else {
+			n = cve_num
+		}
+		uri := fmt.Sprintf(val, n)
+		fmt.Printf(" * [%s](%s)\n", key, uri)
+	}
+	fmt.Printf("\n")
+}
+
 func cvss2markdown(cvssdataset [][]string) {
+	fmt.Printf("|KEY|VALUE|\n")
+	fmt.Printf("|---|-----|\n")
 	for _, node := range cvssdataset {
 		fmt.Printf("|%s|%s|\n", node[0], node[1])
 	}
@@ -57,11 +96,15 @@ func fetchNVD(cve_num string) {
 
 	if len(cvss3data) > 0 {
 		fmt.Printf("## CVSS3 for %s\n", cve_num)
+		fmt.Printf("\n")
 		cvss2markdown(cvss3data)
+		fmt.Printf("\n")
 	}
 	if len(cvss2data) > 0 {
 		fmt.Printf("## CVSS2 for %s\n", cve_num)
+		fmt.Printf("\n")
 		cvss2markdown(cvss2data)
+		fmt.Printf("\n")
 	}
 }
 
