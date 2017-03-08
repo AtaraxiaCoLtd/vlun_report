@@ -38,11 +38,21 @@ var REFFERNCES = map[string]string{
 	"cvedetail":   "http://www.cvedetails.com/cve/%s/",
 }
 
+func usage() {
+	fmt.Printf("Usage: vlun_report -n CVE-2014-0160,CVE-2014-6271\n")
+}
+
 func main() {
 	var flag_cve string
 
-	flag.StringVar(&flag_cve, "numbers", "CVE-2017-6074,CVE-2014-0160", "cve numbers")
-	flag.StringVar(&flag_cve, "n", "CVE-2017-6074,CVE-2014-0160", "cve numbers")
+	flag.StringVar(&flag_cve, "numbers", "", "cve numbers")
+	flag.StringVar(&flag_cve, "n", "", "cve numbers")
+	flag.Parse()
+
+	if flag_cve == "" {
+		usage()
+		os.Exit(0)
+	}
 
 	fmt.Printf("# Vulnerability Report for %s\n\n", flag_cve)
 
