@@ -1,2 +1,2 @@
-# cve_report
-Report template generator based on CVE number
+# vlun_report
+Vulnerability Report template generator based on CVE number
