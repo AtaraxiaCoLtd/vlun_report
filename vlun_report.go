@@ -39,7 +39,7 @@ var REFFERNCES = map[string]string{
 }
 
 func usage() {
-	fmt.Printf("Usage: vlun_report -n CVE-2014-0160,CVE-2014-6271\n")
+	fmt.Printf("Usage: vlun_report -n CVE-2014-0160\n")
 }
 
 func main() {
@@ -56,15 +56,17 @@ func main() {
 
 	fmt.Printf("# Vulnerability Report for %s\n\n", flag_cve)
 
-	cve_nums := strings.Split(flag_cve, ",")
-	for _, num := range cve_nums {
-		fetchNVD(num)
-		fetchREF(num)
-	}
+	fmt.Printf("## OverView\n\n")
+
+	fetchNVD(flag_cve)
+
+	fmt.Printf("## Vulnerable software and versions\n\n")
+
+	fetchREF(flag_cve)
 }
 
 func fetchREF(cve_num string) {
-	fmt.Printf("## Reffernces for %s\n", cve_num)
+	fmt.Printf("## Reffernces\n")
 	fmt.Printf("\n")
 	for key, val := range REFFERNCES {
 		var n string
@@ -105,13 +107,13 @@ func fetchNVD(cve_num string) {
 	cvss2data := fetchCVSS(root, CVSS2_ID)
 
 	if len(cvss3data) > 0 {
-		fmt.Printf("## CVSS3 for %s\n", cve_num)
+		fmt.Printf("## CVSS3\n")
 		fmt.Printf("\n")
 		cvss2markdown(cvss3data)
 		fmt.Printf("\n")
 	}
 	if len(cvss2data) > 0 {
-		fmt.Printf("## CVSS2 for %s\n", cve_num)
+		fmt.Printf("## CVSS2\n")
 		fmt.Printf("\n")
 		cvss2markdown(cvss2data)
 		fmt.Printf("\n")
