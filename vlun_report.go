@@ -38,8 +38,16 @@ var REFFERNCES = map[string]string{
 	"cvedetail":   "http://www.cvedetails.com/cve/%s/",
 }
 
+func info(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, "[+]"+format, a...)
+}
+
+func warn(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, "[!]"+format, a...)
+}
+
 func usage() {
-	fmt.Printf("Usage: vlun_report -n CVE-2014-0160\n")
+	fmt.Fprintf(os.Stderr, "Usage: vlun_report -n CVE-2014-0160\n")
 }
 
 func main() {
